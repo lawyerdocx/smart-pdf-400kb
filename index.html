@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart PDF 400 KB — ضاغط PDF الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f4;--card:#fff;--ink:#14272e;--mut:#5b6e75;--line:#d5dee2;--acc:#0b7a75;--acc2:#e6f4f3;--ok:#1b7f45;--warn:#a65b00;--err:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1a1e;--card:#172429;--ink:#e6eef0;--mut:#93a7ae;--line:#2a3b42;--acc:#35b8b0;--acc2:#12302f;--ok:#5cd08a;--warn:#f0a94b;--err:#ff8a80}}
+*{box-sizing:border-box}
+html{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;background:var(--bg);color:var(--ink)}
+body{margin:0;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);background:var(--bg);line-height:1.7}
+.wrap{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+header{padding:20px 0 8px}
+h1{margin:0;font-size:clamp(1.7rem,5vw,2.5rem);letter-spacing:-.5px}
+h1 b{color:var(--acc)}
+header p{margin:4px 0 0;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+#drop{border:2px dashed var(--acc);background:var(--acc2);text-align:center;padding:36px 16px;cursor:pointer;transition:.15s}
+#drop.over{transform:scale(1.01);border-style:solid}
+#drop strong{font-size:1.15rem;display:block}
+#drop span{color:var(--mut);font-size:.9rem}
+button,.btn{font:inherit;border:0;border-radius:10px;padding:10px 18px;background:var(--acc);color:#fff;cursor:pointer;font-weight:600}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.modes label{border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;display:block}
+.modes input{accent-color:var(--acc)}
+.modes label:has(input:checked){border-color:var(--acc);background:var(--acc2)}
+.modes small{display:block;color:var(--mut);line-height:1.4}
+details summary{cursor:pointer;font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin-top:12px}
+.grid label{display:flex;flex-direction:column;font-size:.9rem;gap:4px}
+.grid label.chk{flex-direction:row;align-items:center;gap:8px}
+input[type=number],select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.file h3{margin:0;word-break:break-all;font-size:1rem}
+.meta{color:var(--mut);font-size:.88rem}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0 4px}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.res{margin-top:12px;display:none}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stats div{background:var(--bg);border-radius:10px;padding:8px 12px}
+.stats small{color:var(--mut);display:block}
+.stats b{font-size:1.15rem}
+.msg{margin-top:10px;font-weight:600}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.err{color:var(--err)}
+.prev{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.prev figure{margin:0;text-align:center;font-size:.8rem;color:var(--mut)}
+.prev canvas{max-width:100%;width:200px;border:1px solid var(--line);border-radius:6px;background:#fff}
+footer{margin-top:24px;color:var(--mut);font-size:.85rem;text-align:center}
+@media(max-width:560px){.modes,.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Smart PDF <b>400 KB</b></h1>
+  <p>اضغط ملفات PDF داخل متصفحك مع الحفاظ على النص القابل للتحديد والبحث. لا يتم رفع أي ملف.</p>
+</header>
+
+<section class="card" id="drop" tabindex="0" role="button" aria-label="اختيار ملفات PDF">
+  <strong>اسحب ملفات PDF وأفلتها هنا</strong>
+  <span>أو اضغط لاختيارها من جهازك</span>
+</section>
+<input type="file" id="pick" accept="application/pdf,.pdf" multiple hidden>
+
+<section class="card">
+  <div class="modes" role="radiogroup" aria-label="وضع الضغط">
+    <label><input type="radio" name="mode" value="high" checked> <b>عالي الجودة</b><small>يبدأ بتحسين البنية دون المساس بالصور</small></label>
+    <label><input type="radio" name="mode" value="balanced"> <b>متوازن</b><small>توازن بين الحجم والوضوح</small></label>
+    <label><input type="radio" name="mode" value="strong"> <b>قوي</b><small>أصغر حجم ممكن مع وضوح مقبول</small></label>
+  </div>
+  <details style="margin-top:14px">
+    <summary>إعدادات متقدمة</summary>
+    <div class="grid">
+      <label>الحجم المستهدف (KB)<input type="number" id="target" value="400" min="20" max="20000"></label>
+      <label>أقل دقة للصور (DPI تقديري)<input type="number" id="mindpi" value="96" min="36" max="300"></label>
+      <label>أعلى جودة للصور (%)<input type="number" id="quality" value="90" min="30" max="95"></label>
+      <label>الألوان<select id="color"><option value="color">المحافظة على الألوان</option><option value="gray">تدرج الرمادي</option></select></label>
+      <label class="chk"><input type="checkbox" id="imgs" checked> ضغط الصور</label>
+      <label class="chk"><input type="checkbox" id="links" checked> الحفاظ على الروابط والإشارات المرجعية</label>
+      <label class="chk"><input type="checkbox" id="searchable" checked> الحفاظ على النصوص القابلة للتحديد والبحث</label>
+    </div>
+    <p class="meta">عند إلغاء خيار النصوص القابلة للبحث، يُسمح كحل أخير فقط بتحويل الصفحات إلى صور إذا تعذّر بلوغ الهدف.</p>
+  </details>
+  <div class="actions">
+    <button id="start" disabled>ابدأ الضغط</button>
+    <button id="clear" class="sec">مسح الملفات من الذاكرة</button>
+  </div>
+</section>
+
+<div id="list"></div>
+<footer>تتم المعالجة محليًا بالكامل. لا يُخزَّن أي ملف ولا يُرسَل إلى أي خادم.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+"use strict";
+/* ===== أدوات مساعدة ===== */
+const {PDFDocument,PDFName,PDFNumber,PDFDict,PDFArray,PDFRef,PDFRawStream,PDFStream}=window.PDFLib||{};
+const $=s=>document.querySelector(s);
+const N=PDFName.of?.bind(PDFName);
+const tick=()=>new Promise(r=>setTimeout(r));
+const fmt=b=>b>=1048576?(b/1048576).toFixed(2)+' MB':(b/1024).toFixed(1)+' KB';
+const items=[];            // الملفات في الذاكرة
+let busy=false;
+
+/* مراحل الضغط لكل وضع: scale = معامل تصغير الأبعاد، q = جودة JPEG */
+const MODES={
+  high:{scales:[1,.9,.8,.7,.6],q:[.85,.78,.7,.62,.55]},
+  balanced:{scales:[.9,.75,.6,.5,.4],q:[.75,.65,.55,.48,.4]},
+  strong:{scales:[.7,.55,.45,.35,.28],q:[.6,.5,.42,.35,.3]}
+};
+function opts(){
+  return{mode:document.querySelector('[name=mode]:checked').value,
+    target:Math.max(20,+$('#target').value||400),minDpi:+$('#mindpi').value||96,
+    quality:Math.min(95,Math.max(30,+$('#quality').value||90)),gray:$('#color').value==='gray',
+    images:$('#imgs').checked,links:$('#links').checked,searchable:$('#searchable').checked};
+}
+
+/* ===== المرحلة 1: تنظيف البنية والبيانات الوصفية ===== */
+function cleanMeta(doc,o){
+  const cat=doc.catalog;
+  ['Metadata','PieceInfo'].forEach(k=>cat.delete(N(k)));
+  if(!o.links)cat.delete(N('Outlines'));
+  doc.context.trailerInfo.Info=undefined;           // حذف Info (المؤلف، البرنامج...)
+  for(const p of doc.getPages()){
+    ['Thumb','PieceInfo','Metadata'].forEach(k=>p.node.delete(N(k)));
+    if(!o.links){                                   // إزالة تعليقات الروابط فقط
+      const an=p.node.lookupMaybe(N('Annots'),PDFArray);
+      if(an)for(let i=an.size()-1;i>=0;i--){
+        const a=an.lookupMaybe(i,PDFDict);
+        if(a&&String(a.get(N('Subtype')))==='/Link')an.remove(i);
+      }
+    }
+  }
+}
+/* عرض الصفحة لكل صورة لتقدير DPI */
+function pageWidths(doc){
+  const m=new Map();
+  for(const p of doc.getPages()){
+    const xo=p.node.Resources()?.lookupMaybe(N('XObject'),PDFDict);
+    if(xo)for(const [,v] of xo.entries())if(v instanceof PDFRef)m.set(v.tag,Math.max(m.get(v.tag)||0,p.getWidth()));
+  }
+  return m;
+}
+/* حذف الكائنات غير المستخدمة (Garbage Collection) */
+function gc(ctx){
+  const seen=new Set(),st=[];
+  const push=v=>{if(v instanceof PDFRef){if(!seen.has(v.tag)){seen.add(v.tag);st.push(ctx.lookup(v));}}else if(v)st.push(v);};
+  const t=ctx.trailerInfo;[t.Root,t.Info,t.Encrypt].forEach(push);
+  while(st.length){
+    let o=st.pop();if(o instanceof PDFStream)o=o.dict;
+    if(o instanceof PDFDict)for(const [,v] of o.entries())push(v);
+    else if(o instanceof PDFArray)for(let i=0;i<o.size();i++)push(o.get(i));
+  }
+  for(const [r] of ctx.enumerateIndirectObjects())if(!seen.has(r.tag))ctx.delete(r);
+}
+/* ===== المرحلة 2أ: اكتشاف الصور المكررة وإعادة توجيه المراجع ===== */
+const isImg=x=>x instanceof PDFRawStream&&x.dict.get(N('Subtype'))===N('Image');
+function dedupe(ctx){
+  const seen=new Map(),map=new Map();
+  for(const [ref,x] of ctx.enumerateIndirectObjects()){
+    if(!isImg(x))continue;
+    const c=x.getContents();let h=2166136261;
+    for(let i=0;i<c.length;i++){h^=c[i];h=Math.imul(h,16777619);}
+    const d=x.dict,key=[c.length,h>>>0,d.get(N('Width')),d.get(N('Height')),d.get(N('ColorSpace')),d.get(N('SMask'))].join(':');
+    if(seen.has(key))map.set(ref.tag,seen.get(key));else seen.set(key,ref);
+  }
+  if(!map.size)return;
+  const fix=(o)=>{
+    if(o instanceof PDFStream)o=o.dict;
+    if(o instanceof PDFDict){for(const [k,v] of o.entries()){
+      if(v instanceof PDFRef){const m=map.get(v.tag);if(m)o.set(k,m);}else if(v instanceof PDFDict||v instanceof PDFArray)fix(v);}}
+    else if(o instanceof PDFArray){for(let i=0;i<o.size();i++){const v=o.get(i);
+      if(v instanceof PDFRef){const m=map.get(v.tag);if(m)o.set(i,m);}else if(v instanceof PDFDict||v instanceof PDFArray)fix(v);}}
+  };
+  for(const [,x] of ctx.enumerateIndirectObjects())fix(x);
+}
+/* ===== المرحلة 2ب: إعادة ضغط الصور ===== */
+function csComps(cs){
+  if(cs instanceof PDFName){const s=String(cs);return s==='/DeviceRGB'?3:s==='/DeviceGray'?1:0;}
+  if(cs instanceof PDFArray&&String(cs.get(0))==='/ICCBased'){
+    const n=cs.lookup(1)?.dict?.lookup(N('N'))?.asNumber();return n===3||n===1?n:0;}
+  return 0;
+}
+function unPNG(d,w,c){            // فك مرشحات PNG Predictor
+  const rb=w*c,rows=Math.floor(d.length/(rb+1)),out=new Uint8Array(rows*rb);
+  for(let y=0;y<rows;y++){const f=d[y*(rb+1)],s=y*(rb+1)+1,o=y*rb;
+    for(let x=0;x<rb;x++){
+      const v=d[s+x],a=x>=c?out[o+x-c]:0,b=y?out[o-rb+x]:0,cc=(x>=c&&y)?out[o-rb+x-c]:0;let r;
+      if(f===1)r=v+a;else if(f===2)r=v+b;else if(f===3)r=v+((a+b)>>1);
+      else if(f===4){const p=a+b-cc,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-cc);r=v+(pa<=pb&&pa<=pc?a:pb<=pc?b:cc);}
+      else r=v;
+      out[o+x]=r&255;}}
+  return out;
+}
+const toBlob=(c,q)=>new Promise(r=>c.toBlob(r,'image/jpeg',q));
+function grayify(ctx2,w,h){
+  const im=ctx2.getImageData(0,0,w,h),p=im.data;
+  for(let i=0;i<p.length;i+=4){p[i]=p[i+1]=p[i+2]=.299*p[i]+.587*p[i+1]+.114*p[i+2];}
+  ctx2.putImageData(im,0,0);
+}
+async function shrink(stream,st,o,pageW){
+  const d=stream.dict,g=k=>d.lookup(N(k));
+  if(String(g('ImageMask'))==='true'||g('Mask'))return null;
+  const w=g('Width')?.asNumber(),h=g('Height')?.asNumber();
+  if(!w||!h||w*h<6000||g('BitsPerComponent')?.asNumber()!==8)return null;
+  const f=g('Filter'),names=f instanceof PDFArray?f.asArray().map(String):f?[String(f)]:[];
+  const comps=csComps(g('ColorSpace'));
+  if(names.length!==1||!comps)return null;
+  const raw=stream.getContents();let src;
+  if(names[0]==='/DCTDecode'){
+    src=await createImageBitmap(new Blob([raw],{type:'image/jpeg'}));
+  }else if(names[0]==='/FlateDecode'){
+    let data=pako.inflate(raw),parms=g('DecodeParms');
+    if(parms instanceof PDFArray)parms=parms.lookup(0);
+    const pred=parms instanceof PDFDict?(parms.lookup(N('Predictor'))?.asNumber()||1):1;
+    if(pred>=10)data=unPNG(data,w,comps);else if(pred!==1)return null;
+    if(data.length<w*h*comps)return null;
+    const im=new ImageData(w,h),p=im.data;
+    for(let i=0,j=0;i<w*h;i++,j+=4){
+      if(comps===3){p[j]=data[i*3];p[j+1]=data[i*3+1];p[j+2]=data[i*3+2];}
+      else p[j]=p[j+1]=p[j+2]=data[i];
+      p[j+3]=255;}
+    src=document.createElement('canvas');src.width=w;src.height=h;src.getContext('2d').putImageData(im,0,0);
+  }else return null;
+  let s=st.scale;                                    // احترام أقل دقة مسموحة
+  if(pageW){s=Math.max(s,Math.min(1,o.minDpi/(w/(pageW/72))));}
+  s=Math.min(1,s);
+  const nw=Math.max(1,Math.round(w*s)),nh=Math.max(1,Math.round(h*s));
+  const cv=document.createElement('canvas');cv.width=nw;cv.height=nh;
+  const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,nw,nh);
+  cx.imageSmoothingQuality='high';cx.drawImage(src,0,0,nw,nh);
+  if(o.gray)grayify(cx,nw,nh);
+  const blob=await toBlob(cv,Math.min(st.q,o.quality/100));
+  const bytes=new Uint8Array(await blob.arrayBuffer());
+  if(bytes.length>raw.length*.92)return null;        // لا نستبدل إلا إذا كان الربح واضحًا
+  const nd=PDFDict.withContext(stream.dict.context);
+  nd.set(N('Type'),N('XObject'));nd.set(N('Subtype'),N('Image'));
+  nd.set(N('Width'),PDFNumber.of(nw));nd.set(N('Height'),PDFNumber.of(nh));
+  nd.set(N('ColorSpace'),N('DeviceRGB'));nd.set(N('BitsPerComponent'),PDFNumber.of(8));
+  nd.set(N('Filter'),N('DCTDecode'));nd.set(N('Length'),PDFNumber.of(bytes.length));
+  const sm=d.get(N('SMask'));if(sm)nd.set(N('SMask'),sm);   // الحفاظ على الشفافية
+  return PDFRawStream.of(nd,bytes);
+}
+async function optimize(buf,st,o,prog){
+  const doc=await PDFDocument.load(buf,{updateMetadata:false});
+  const ctx=doc.context;
+  cleanMeta(doc,o);dedupe(ctx);
+  if(st&&o.images){
+    const widths=pageWidths(doc);
+    const list=ctx.enumerateIndirectObjects().filter(([,x])=>isImg(x));
+    for(let i=0;i<list.length;i++){
+      prog(i/Math.max(1,list.length));await tick();
+      try{const r=await shrink(list[i][1],st,o,widths.get(list[i][0].tag));if(r)ctx.assign(list[i][0],r);}
+      catch(e){console.warn('تخطي صورة',e);}
+    }
+  }
+  gc(ctx);
+  return doc.save({useObjectStreams:true,addDefaultPage:false});
+}
+/* ===== المرحلة الأخيرة (اختيارية): إعادة بناء الصفحات كصور ===== */
+async function rasterize(buf,o,target,prog){
+  const src=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;
+  let best=null;
+  for(const [sc,q] of [[1.5,.7],[1.2,.6],[1,.5],[.8,.45],[.65,.4]]){
+    const out=await PDFDocument.create();
+    for(let p=1;p<=src.numPages;p++){
+      prog(p/src.numPages);await tick();
+      const pg=await src.getPage(p),vp=pg.getViewport({scale:sc}),base=pg.getViewport({scale:1});
+      const cv=document.createElement('canvas');cv.width=Math.ceil(vp.width);cv.height=Math.ceil(vp.height);
+      const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
+      await pg.render({canvasContext:cx,viewport:vp}).promise;
+      if(o.gray)grayify(cx,cv.width,cv.height);
+      const img=await out.embedJpg(new Uint8Array(await (await toBlob(cv,q)).arrayBuffer()));
+      out.addPage([base.width,base.height]).drawImage(img,{x:0,y:0,width:base.width,height:base.height});
+    }
+    best=await out.save();if(best.length<=target)break;
+  }
+  return best;
+}
+
+/* ===== المعاينة ===== */
+async function thumb(bytes,canvas){
+  try{
+    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(bytes.slice(0))}).promise;
+    const pg=await pdf.getPage(1),v0=pg.getViewport({scale:1}),vp=pg.getViewport({scale:400/v0.width});
+    canvas.width=vp.width;canvas.height=vp.height;
+    await pg.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+  }catch(e){console.warn('تعذرت المعاينة',e);}
+}
+
+/* ===== إدارة الملفات والواجهة ===== */
+async function addFile(file){
+  const el=document.createElement('section');el.className='card file';
+  el.innerHTML=`<h3></h3><div class="meta"></div><div class="bar"><i></i></div><div class="meta st"></div>
+  <div class="res"><div class="stats"></div><div class="msg"></div>
+  <div class="prev"><figure><canvas class="a"></canvas><figcaption>قبل</figcaption></figure><figure><canvas class="b"></canvas><figcaption>بعد</figcaption></figure></div>
+  <div class="actions"><button class="dl">تحميل الملف المضغوط</button></div></div>`;
+  el.querySelector('h3').textContent=file.name;
+  $('#list').appendChild(el);
+  const it={file,el,buf:null,pages:0,out:null,url:null,ok:false};
+  const meta=el.querySelector('.meta'),st=el.querySelector('.st');
+  try{
+    if(!/pdf$/i.test(file.type)&&!/\.pdf$/i.test(file.name))throw new Error('type');
+    it.buf=await file.arrayBuffer();
+    const head=new TextDecoder().decode(new Uint8Array(it.buf,0,Math.min(1024,it.buf.byteLength)));
+    if(!head.includes('%PDF-'))throw new Error('type');
+    const d=await PDFDocument.load(it.buf,{updateMetadata:false});   // يفشل إذا كان مشفرًا
+    it.pages=d.getPageCount();it.ok=true;
+    meta.textContent=`الحجم الأصلي: ${fmt(file.size)} — عدد الصفحات: ${it.pages}`;
+    st.textContent='جاهز للضغط';
+  }catch(e){
+    const m=String(e&&e.message||e);
+    meta.textContent=`الحجم: ${fmt(file.size)}`;
+    st.className='msg err';
+    st.textContent=/encrypt/i.test(m)?'هذا الملف محمي بكلمة مرور. أزل الحماية ثم أعد المحاولة.':
+      m==='type'?'هذا ليس ملف PDF صالحًا.':'تعذّر فتح الملف، قد يكون تالفًا.';
+    it.buf=null;
+  }
+  items.push(it);$('#start').disabled=!items.some(i=>i.ok);
+}
+async function run(it){
+  const o=opts(),target=o.target*1024,bar=it.el.querySelector('.bar i'),st=it.el.querySelector('.st');
+  const m=MODES[o.mode];let stages=[];
+  if(o.mode==='high')stages.push(null);                // أولًا: تحسين البنية فقط
+  if(o.images)m.scales.forEach((s,i)=>stages.push({scale:s,q:m.q[i]}));
+  if(!stages.length)stages=[null];
+  if(it.url){URL.revokeObjectURL(it.url);it.url=null;}
+  it.el.querySelector('.res').style.display='none';
+  let best=null,level=0,raster=false;
+  for(let i=0;i<stages.length;i++){
+    st.textContent=`المرحلة ${i+1} من ${stages.length}: ${stages[i]?'ضغط الصور':'تحسين البنية'}…`;
+    const out=await optimize(it.buf,stages[i],o,p=>bar.style.width=((i+p)/stages.length*100)+'%');
+    if(!best||out.length<best.length){best=out;level=i;}
+    bar.style.width=((i+1)/stages.length*100)+'%';
+    if(out.length<=target)break;
+  }
+  if(best.length>target&&!o.searchable){
+    st.textContent='الحل الأخير: إعادة بناء الصفحات كصور…';
+    const r=await rasterize(it.buf,o,target,p=>bar.style.width=(p*100)+'%');
+    if(r&&r.length<best.length){best=r;raster=true;}
+  }
+  let same=false;
+  if(best.length>=it.buf.byteLength){best=new Uint8Array(it.buf);same=true;}
+  it.out=best;bar.style.width='100%';st.textContent='اكتمل';
+  const red=Math.max(0,(1-best.length/it.buf.byteLength)*100),hit=best.length<=target;
+  const res=it.el.querySelector('.res');res.style.display='block';
+  it.el.querySelector('.stats').innerHTML=[['الحجم الأصلي',fmt(it.buf.byteLength)],['الحجم النهائي',fmt(best.length)],
+    ['نسبة التقليل',red.toFixed(1)+'%'],['عدد الصفحات',it.pages]].map(([a,b])=>`<div><small>${a}</small><b>${b}</b></div>`).join('');
+  const msg=it.el.querySelector('.msg');
+  if(same){msg.className='msg warn';msg.textContent=hit?'الملف أصغر من الهدف بالفعل ولا يمكن تقليله أكثر دون خسارة، لذا أُبقي كما هو.':
+    `لم يمكن تقليل الملف أكثر دون خسارة. أقل حجم ممكن: ${fmt(best.length)}.`;}
+  else if(hit){msg.className='msg ok';msg.textContent='النتيجة: تم الوصول إلى الحجم المستهدف.'+(raster?' (تم تحويل الصفحات إلى صور، فالنص لم يعد قابلًا للتحديد)':'');}
+  else{msg.className='msg warn';msg.textContent=`لم يتحقق الهدف (${fmt(target)}) دون تشويه واضح. أقل حجم أمكن الوصول إليه: ${fmt(best.length)} بأدنى جودة مقبولة.`;}
+  it.url=URL.createObjectURL(new Blob([best],{type:'application/pdf'}));
+  const dl=it.el.querySelector('.dl');
+  dl.onclick=()=>{const a=document.createElement('a');a.href=it.url;
+    a.download=it.file.name.replace(/\.pdf$/i,'')+'_Compressed.pdf';document.body.appendChild(a);a.click();a.remove();};
+  thumb(it.buf,it.el.querySelector('.a'));thumb(best,it.el.querySelector('.b'));
+}
+$('#start').onclick=async()=>{
+  if(busy)return;busy=true;$('#start').disabled=true;
+  for(const it of items.filter(i=>i.ok)){
+    try{await run(it);}catch(e){console.error(e);const s=it.el.querySelector('.st');s.className='msg err';s.textContent='حدث خطأ أثناء الضغط: '+(e.message||e);}
+  }
+  busy=false;$('#start').disabled=false;
+};
+function clearAll(){
+  items.forEach(i=>{if(i.url)URL.revokeObjectURL(i.url);i.buf=i.out=null;});
+  items.length=0;$('#list').innerHTML='';$('#pick').value='';$('#start').disabled=true;
+}
+$('#clear').onclick=()=>{if(!busy)clearAll();};
+const drop=$('#drop'),pick=$('#pick');
+const take=fs=>[...fs].forEach(addFile);
+drop.onclick=()=>pick.click();
+drop.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick.click();}};
+pick.onchange=()=>{take(pick.files);pick.value='';};
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>take(e.dataTransfer.files));
+
+/* ===== تهيئة PDF.js (عامل داخل Blob لتجنب مشاكل CORS) ===== */
+(async()=>{
+  if(!window.PDFLib||!window.pdfjsLib||!window.pako){
+    $('#list').innerHTML='<div class="card msg err">تعذّر تحميل المكتبات. تحقق من اتصال الإنترنت ثم أعد تحميل الصفحة.</div>';return;}
+  const u='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  try{pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([await (await fetch(u)).text()],{type:'text/javascript'}));}
+  catch{pdfjsLib.GlobalWorkerOptions.workerSrc=u;}
+})();
+</script>
+</body>
+</html>
